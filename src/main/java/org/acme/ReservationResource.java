@@ -1,6 +1,7 @@
 package org.acme;
 
 import io.quarkus.logging.Log;
+import io.micrometer.core.annotation.Timed;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -29,6 +30,7 @@ http POST :8080/reservation <<< '{
     @POST
     @Consumes("application/json")
     @Transactional
+    @Timed
     public Response create(Reservation reservation) {
         if(reservation.customerName == null || reservation.customerName.isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST.getStatusCode()).build();
