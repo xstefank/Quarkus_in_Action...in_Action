@@ -1,0 +1,21 @@
+version: 3.7
+
+services:
+
+  postgres:
+    image: docker.io/library/postgres:17
+    container_name: postgres
+    environment:
+      POSTGRES_DB: quarkus
+      POSTGRES_USER: quarkus
+      POSTGRES_PASSWORD: quarkus
+    ports:
+      - "5432:5432"
+
+  otel-lgtm:
+    image: docker.io/grafana/otel-lgtm:0.11.0
+    container_name: otel-lgtm
+    ports:
+      - "3000:3000"
+      - "4317:4317"
+      - "4318:4318"

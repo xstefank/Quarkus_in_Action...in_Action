@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: docker.io/library/postgres:17
+          resources:
+            limits:
+              memory: 150Mi
+          volumeMounts:
+            - mountPath: /data
+              name: data
+          env:
+            - name: POSTGRES_DB
+              value: quarkus
+            - name: POSTGRES_USER
+              value: quarkus
+            - name: POSTGRES_PASSWORD
+              value: quarkus
+            - name: PGDATA
+              value: /data/pgdata
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  clusterIP: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-lgtm
+  labels:
+    app: otel-lgtm
+spec:
+  ports:
+    - port: 3000
+      name: otel-lgtm-ui
+    - port: 4317
+      name: otlp-receiver
+    - port: 4318
+      name: otlp-http-receiver
+  selector:
+    app: otel-lgtm
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-lgtm
+  labels:
+    app: otel-lgtm
+spec:
+  selector:
+    matchLabels:
+      app: otel-lgtm
+  template:
+    metadata:
+      labels:
+        app: otel-lgtm
+    spec:
+      containers:
+        - image: docker.io/grafana/otel-lgtm:0.11.0
+          name: otel-lgtm
+          volumeMounts:
+            - mountPath: /data
+              name: data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app.kubernetes.io/name: otel-lgtm
+  name: otel-lgtm
+spec:
+  port:
+    targetPort: otel-lgtm-ui
+  to:
+    kind: Service
+    name: otel-lgtm
